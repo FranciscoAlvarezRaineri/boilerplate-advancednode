@@ -8,14 +8,14 @@ function ensureAuthenticated(req, res, next) {
   res.redirect("/");
 }
 
-module.exports = function(app, myDataBase) {
+module.exports = function (app, myDataBase) {
   app.route("/").get((req, res) => {
     res.render("index", {
       title: "Connected to Database",
       message: "Please login",
       showLogin: true,
       showRegistration: true,
-      showSocialAuth: true
+      showSocialAuth: true,
     });
   });
 
@@ -63,8 +63,19 @@ module.exports = function(app, myDataBase) {
     }
   );
 
-  app.route("/auth/github").get(passport.authenticate('github'))
-  app.route("/auth/github/callback").get(passport.authenticate('local', { failureRedirect: '/' }), (req,res) => {
-    res.redirect('/profile');
-  })
+  app.route("/auth/github").get(passport.authenticate("github"));
+
+  app
+    .route("/auth/github/callback")
+    .get(
+      passport.authenticate("local", { failureRedirect: "/" }),
+      (req, res) => {
+        req.session.user_id = req.user.id;
+        res.redirect("/chat");
+      }
+    );
+
+  app.route("/chat").get(ensureAuthenticated, (req, res) => {
+    res.render("chat", { user: req.user });
+  });
 };
